@@ -1,10 +1,10 @@
 class Dice < ActiveRecord::Base
   attr_accessible :value
-  before_create :start
-  
-  private
+  belongs_to :round, :dependent => :destroy
 
-  def start
-  	self.value = rand(1..6)
-  end
+  after_initialize do |dice|
+  	self.value=rand(1..6)
+  end	
+  
+
 end

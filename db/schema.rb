@@ -11,13 +11,16 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120913030843) do
+ActiveRecord::Schema.define(:version => 20120913035552) do
 
   create_table "dices", :force => true do |t|
     t.integer  "value"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
+    t.integer  "round_id"
   end
+
+  add_index "dices", ["round_id"], :name => "index_dices_on_round_id"
 
   create_table "rounds", :force => true do |t|
     t.string   "name"
