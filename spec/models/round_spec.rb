@@ -17,10 +17,6 @@ describe Round do
 		it "should create 6 dice for the round" do
 			@r.dices.count.should == 6
 		end
-
-		it "should have an interation of 1" do
-			@r.iteration.should == 1
-		end
 	end
 
 	context "scoring" do
@@ -212,7 +208,7 @@ describe Round do
 				@r.score
 				@r.points.should == 300
 			end
-			it "should score correctly with fours 1s and and 5s" do
+			it "should score correctly with fours 1s and one 5" do
 				@r.points=0
 				@r.dices[0].value=1
 				@r.dices[1].value=1
@@ -225,13 +221,73 @@ describe Round do
 			end
 
 		end
-		
-
 	end
 
-	# context "iterations" do
-	# 	it "should require you to hold at least one more dice for each iteration" do
-	# 		# @r.hold_count.should be < @r.dices.count(1)
-	# 	end
-	# end
+	context "rolling again" do
+		it "should accept an array of 6 booleans, if false it should re-roll the dice" do
+			@r.held_dice=[false,false,false,false,false,false]
+			@r.dices[0].value=1
+			@r.dices[1].value=1
+			dice3=@r.dices[2]
+			@r.dices[2].value=3
+			dice4=@r.dices[3]
+			@r.dices[3].value=3
+			dice5=@r.dices[4]
+			@r.dices[4].value=4
+			dice6=@r.dices[5]
+			@r.dices[5].value=6
+			new_held_dice = [true,true,false,false,false,false]
+			@r.roll_again(new_held_dice)
+			@r.dices[0].value.should eq(1)
+			@r.dices[1].value.should eq(1)
+			@r.dices[2].should_not eq(dice3)
+			@r.dices[3].should_not eq(dice4)
+			@r.dices[4].should_not eq(dice5)
+			@r.dices[5].should_not eq(dice6)
+		end
+
+		it "should require you to hold at least one more dice than last roll" do
+		# 	@r.held_dice=[true,false,false,false,false,false]
+		# 	new_held_dice=[true,false,false,false,false,false]
+		# 	@r.roll_again(new_held_dice)
+		# 	@r.held_dice.should_not == [true,false,false,false,false,false]
+		end
+
+		it "should update Round.held_dice after each dice roll" do
+			@r.held_dice=[false,false,false,false,false,false]
+			new_held_dice=[true,false,false,false,false,false]
+			@r.roll_again(new_held_dice)
+			@r.held_dice.should_not == [false,false,false,false,false,false]
+		end
+
+		it "should score the results again after the roll" do
+			@r.points=0
+			@r.dices[0].value=5
+			@r.dices[1].value=5
+			@r.dices[2].value=4
+			@r.dices[3].value=3
+			@r.dices[4].value=6
+			@r.dices[5].value=6
+			@r.score
+			a=@r.points
+			new_held_dice=[true,true,false,false,false,false]
+			@r.roll_again(new_held_dice)
+			b=@r.points
+			a.should_not eq(b)
+		end
+	end
+	context "ending process" do
+		it "should allow player to stay" do
+			@r.points=0
+			@r.dices[0].value=5
+			@r.dices[1].value=5
+			@r.dices[2].value=5
+			@r.dices[3].value=3
+			@r.dices[4].value=6
+			@r.dices[5].value=6
+			@r.score
+			@r.player_stays
+			@r.stay.should eq(true)
+		end
+	end
 end

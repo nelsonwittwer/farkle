@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120913035552) do
+ActiveRecord::Schema.define(:version => 20120917230336) do
 
   create_table "dices", :force => true do |t|
     t.integer  "value"
@@ -22,6 +22,24 @@ ActiveRecord::Schema.define(:version => 20120913035552) do
 
   add_index "dices", ["round_id"], :name => "index_dices_on_round_id"
 
+  create_table "games", :force => true do |t|
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
+  create_table "games_players", :id => false, :force => true do |t|
+    t.integer "game_id"
+    t.integer "player_id"
+  end
+
+  add_index "games_players", ["game_id", "player_id"], :name => "index_games_players_on_game_id_and_player_id"
+
+  create_table "players", :force => true do |t|
+    t.string   "name"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
   create_table "rounds", :force => true do |t|
     t.string   "name"
     t.integer  "points"
@@ -29,6 +47,21 @@ ActiveRecord::Schema.define(:version => 20120913035552) do
     t.boolean  "stay"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
+    t.integer  "turn_id"
+    t.boolean  "complete"
   end
+
+  add_index "rounds", ["turn_id"], :name => "index_rounds_on_turn_id"
+
+  create_table "turns", :force => true do |t|
+    t.integer  "total_points"
+    t.datetime "created_at",   :null => false
+    t.datetime "updated_at",   :null => false
+    t.integer  "player_id"
+    t.integer  "game_id"
+  end
+
+  add_index "turns", ["game_id"], :name => "index_turns_on_game_id"
+  add_index "turns", ["player_id"], :name => "index_turns_on_player_id"
 
 end

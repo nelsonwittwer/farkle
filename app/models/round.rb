@@ -1,26 +1,32 @@
 class Round < ActiveRecord::Base
-  attr_accessible :iteration, :name, :points, :complete, :hold, :hold_count
+  attr_accessible :name, :points, :stay, :complete
+  attr_accessor :held_dice, :old_points
   has_many :dices
+  belongs_to :turn
   after_initialize do |round|
-	self.iteration=1
-	@complete=false
-	# self.hold=[nil,nil,nil,nil,nil,nil]
-	# self.complete=false
-	6.times do
-		self.dices.new
-	end
+  	self.held_dice=[false,false,false,false,false,false]
+  	self.complete=false
+    self.points=0
+  	6.times do
+  		self.dices.new
+  	end
+    self.score
   end
+
+  #######################
+  ### Scoring methods ###
+  #######################
 
   def score
   	result = get_result(self.dices)
   	if sort_dice(result) == [1,2,3,4,5,6]
   		self.points=1500
   		self.name="Straight!"
-  		@complete=true
+  		self.complete=true
   	elsif self.count_same_dice(result).max==6
   		self.points=3000
   		self.name="6 of a kind!"
-  		@complete=true
+  		self.complete=true
   	elsif self.count_same_dice(result).max==5
   		self.points=1500
   		self.name="5 of a kind!"
@@ -30,11 +36,11 @@ class Round < ActiveRecord::Base
   	elsif self.count_same_dice(result).count(3)==2
   		self.points=2000
   		self.name="Two Tripples!"
-  		@complete=true
+  		self.complete=true
 	elsif self.count_same_dice(result).count(2)==3
   		self.points=1500
   		self.name="Three Doubles!"
-  		@complete=true
+  		self.complete=true
   	elsif self.count_same_dice(result).count(3)==1
   		tripple_value=[]
   		for i in 0..5
@@ -52,19 +58,16 @@ class Round < ActiveRecord::Base
   		self.points=1300
   	end
   	#100 for each 1	
-  	if self.count_same_dice(result)[0]>0 && self.count_same_dice(result)[0]<3 && @complete!=true
+  	if self.count_same_dice(result)[0]>0 && self.count_same_dice(result)[0]<3 && self.complete!=true
   		self.points=self.points+(100*self.count_same_dice(result)[0])
   		self.name="#{self.count_same_dice(result)[0]} 1s!"
   	end
 	#50 for each 5
-	if self.count_same_dice(result)[4]>0 && self.count_same_dice(result)[4]<3 && @complete!=true
+	if self.count_same_dice(result)[4]>0 && self.count_same_dice(result)[4]<3 && self.complete!=true
   		self.points=self.points+(50*self.count_same_dice(result)[4])
   		self.name="#{self.count_same_dice(result)[4]} 5s!"
   	end
   	
-
-
-
   end
 
   def sort_dice(array_o_dice)
@@ -89,5 +92,35 @@ class Round < ActiveRecord::Base
   	return count
   end
 
+  ##########################
+  ### Roll Again Methods ###
+  ##########################
+
+  def roll_again(new_held_dice)
+    if new_held_dice.count(true) > self.held_dice.count(true)
+      for i in 0..held_dice.count-1
+        if new_held_dice[i]==false
+          self.dices[i]=Dice.new
+        end
+      end
+      self.held_dice=new_held_dice
+      self.old_points=self.points
+      self.score
+      if self.old_points < self.points
+        self.points=0
+        self.complete=true
+      end
+    else
+      #I need to raise exception if the player didn't hold another dice.
+    end
+  end
+
+  ##########################
+  ### Player Stay Method ###
+  ##########################
+
+  def player_stays
+    self.stay=true
+  end
 	
 end
