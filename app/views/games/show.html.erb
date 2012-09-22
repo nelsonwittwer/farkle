@@ -1,0 +1,6 @@
+<h1>Farkle!</h1>
+<%@game.players.each do |player|%>
+	You rolled <%=@game.turns.last.rounds.last.get_result(@game.turns.last.rounds.last.dices) %>
+	Points = <%=@game.turns.last.rounds.last.points %>
+	Name = <%=@game.turns.last.rounds.last.name %>
+<% end %>

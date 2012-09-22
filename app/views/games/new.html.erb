@@ -1,0 +1,22 @@
+<h1>Farkle!</h1>
+<h3>How many people will be playing today?</h3>	
+
+<%= form_for @game do |f| %>
+  <% if @game.errors.any? %>
+    <div class="error_messages">
+      <h2><%= pluralize(@game.errors.count, "error") %> prohibited this message from being saved:</h2>
+      <ul>
+      <% @game.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <div class="field">
+    <%= f.label :player_count, "How many people are playing?" %><br />
+    <%= f.text_field :player_count %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

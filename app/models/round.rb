@@ -3,12 +3,13 @@ class Round < ActiveRecord::Base
   attr_accessor :held_dice, :old_points
   has_many :dices
   belongs_to :turn
-  after_initialize do |round|
+  after_save :setup
+  def setup
   	self.held_dice=[false,false,false,false,false,false]
   	self.complete=false
     self.points=0
   	6.times do
-  		self.dices.new
+  		self.dices.new.save
   	end
     self.score
   end
@@ -17,34 +18,43 @@ class Round < ActiveRecord::Base
   ### Scoring methods ###
   #######################
 
+  #look into putting options into a hash, check if true
+  #lambda research
+  # conditions = []
+  # conditions<<{condition: lambda{|result|sort_dice(result) == [1,2,3,4,5,6]}, name: "Straight!", points: 1500, complete: true}
+  # conditions<<{condition: lambda{|result|sort_dice(result) == [1,2,3,4,5,6]}, name: "Straight!", points: 1500, complete: true}
+  # conditions<<{condition: lambda{|result|sort_dice(result) == [1,2,3,4,5,6]}, name: "Straight!", points: 1500, complete: true}
+
+  # conditions.select{|hash|hash[:condition].call(@result)}
+
   def score
-  	result = get_result(self.dices)
-  	if sort_dice(result) == [1,2,3,4,5,6]
+  	@result = get_result(self.dices)
+  	if sort_dice(@result) == [1,2,3,4,5,6]
   		self.points=1500
   		self.name="Straight!"
   		self.complete=true
-  	elsif self.count_same_dice(result).max==6
+  	elsif self.count_same_dice(@result).max==6
   		self.points=3000
   		self.name="6 of a kind!"
   		self.complete=true
-  	elsif self.count_same_dice(result).max==5
+  	elsif self.count_same_dice(@result).max==5
   		self.points=1500
   		self.name="5 of a kind!"
-  	elsif self.count_same_dice(result).max==4 && count_same_dice(result).count(2)!=1
+  	elsif self.count_same_dice(@result).max==4 && count_same_dice(@result).count(2)!=1
   		self.points=1000
   		self.name="4 of a kind!"
-  	elsif self.count_same_dice(result).count(3)==2
+  	elsif self.count_same_dice(@result).count(3)==2
   		self.points=2000
   		self.name="Two Tripples!"
   		self.complete=true
-	elsif self.count_same_dice(result).count(2)==3
+  	elsif self.count_same_dice(@result).count(2)==3
   		self.points=1500
   		self.name="Three Doubles!"
   		self.complete=true
-  	elsif self.count_same_dice(result).count(3)==1
+  	elsif self.count_same_dice(@result).count(3)==1
   		tripple_value=[]
   		for i in 0..5
-  			if self.count_same_dice(result)[i]==3
+  			if self.count_same_dice(@result)[i]==3
   				self.points=100*(i+1)
   				self.name="Three #{i+1}s!"
   				#1s are 300, not 100
@@ -52,24 +62,30 @@ class Round < ActiveRecord::Base
   					self.points=300
   				end
   			end
-  		end
-  	elsif self.count_same_dice(result).max==4 && count_same_dice(result).count(2)==1
+      end
+  	elsif self.count_same_dice(@result).max==4 && count_same_dice(@result).count(2)==1
   		self.name="4 of a kind and a pair!"
   		self.points=1300
-  	end
+    end
   	#100 for each 1	
-  	if self.count_same_dice(result)[0]>0 && self.count_same_dice(result)[0]<3 && self.complete!=true
-  		self.points=self.points+(100*self.count_same_dice(result)[0])
-  		self.name="#{self.count_same_dice(result)[0]} 1s!"
+  	if self.count_same_dice(@result)[0]>0 && self.count_same_dice(@result)[0]<3 && self.complete!=true
+      self.points=self.points+(100*self.count_same_dice(@result)[0])
+  		self.name="#{self.count_same_dice(@result)[0]} 1s!"
   	end
-	#50 for each 5
-	if self.count_same_dice(result)[4]>0 && self.count_same_dice(result)[4]<3 && self.complete!=true
-  		self.points=self.points+(50*self.count_same_dice(result)[4])
-  		self.name="#{self.count_same_dice(result)[4]} 5s!"
-  	end
-  	
+  	#50 for each 5
+  	if self.count_same_dice(@result)[4]>0 && self.count_same_dice(@result)[4]<3 && self.complete!=true
+    		self.points=self.points+(50*self.count_same_dice(@result)[4])
+    		self.name="#{self.count_same_dice(@result)[4]} 5s!"
+    end
+
+    if self.points.nil?
+      binding.pry
+    end
+
   end
 
+
+  	
   def sort_dice(array_o_dice)
   	 array_o_dice.sort! { |a,b| a <=> b }
   end
@@ -80,8 +96,8 @@ class Round < ActiveRecord::Base
   	array_o_dice.count.times do
   		result[i]=array_o_dice[i].value
   		i=i+1
-	end
-	return result
+	  end
+	  return result
   end
 
   def count_same_dice(array)

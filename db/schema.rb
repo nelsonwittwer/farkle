@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120917230336) do
+ActiveRecord::Schema.define(:version => 20120919200058) do
 
   create_table "dices", :force => true do |t|
     t.integer  "value"
@@ -30,6 +30,7 @@ ActiveRecord::Schema.define(:version => 20120917230336) do
   create_table "games_players", :id => false, :force => true do |t|
     t.integer "game_id"
     t.integer "player_id"
+    t.integer "game_score"
   end
 
   add_index "games_players", ["game_id", "player_id"], :name => "index_games_players_on_game_id_and_player_id"
