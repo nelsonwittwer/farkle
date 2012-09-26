@@ -3,12 +3,10 @@ require 'spec_helper'
 describe Round do
 	before(:each) do
 		@r=Round.new
-		@r.save
 		subject { @r }
 	end
 		
 	
-	it { should respond_to(:iteration) }
 	it { should respond_to(:name) }
 	it { should respond_to(:points) }
 	it { should respond_to(:stay) }
@@ -226,31 +224,24 @@ describe Round do
 	context "rolling again" do
 		it "should accept an array of 6 booleans, if false it should re-roll the dice" do
 			@r.held_dice=[false,false,false,false,false,false]
-			@r.dices[0].value=1
+			@r.dices[0].value=2
+			dice=@r.dices[0] #make sure the dice isn't the same when it is re-rolled
 			@r.dices[1].value=1
-			dice3=@r.dices[2]
-			@r.dices[2].value=3
-			dice4=@r.dices[3]
-			@r.dices[3].value=3
-			dice5=@r.dices[4]
-			@r.dices[4].value=4
-			dice6=@r.dices[5]
-			@r.dices[5].value=6
-			new_held_dice = [true,true,false,false,false,false]
+			@r.dices[2].value=1
+			@r.dices[3].value=1
+			@r.dices[4].value=1
+			@r.dices[5].value=1
+			new_held_dice = [false,true,true,true,true,true]
 			@r.roll_again(new_held_dice)
-			@r.dices[0].value.should eq(1)
-			@r.dices[1].value.should eq(1)
-			@r.dices[2].should_not eq(dice3)
-			@r.dices[3].should_not eq(dice4)
-			@r.dices[4].should_not eq(dice5)
-			@r.dices[5].should_not eq(dice6)
+			@r.dices[0].should_not eq(dice)
+			@r.held_dice.should eq(new_held_dice)
 		end
 
 		it "should require you to hold at least one more dice than last roll" do
-		# 	@r.held_dice=[true,false,false,false,false,false]
-		# 	new_held_dice=[true,false,false,false,false,false]
-		# 	@r.roll_again(new_held_dice)
-		# 	@r.held_dice.should_not == [true,false,false,false,false,false]
+			@r.held_dice=[true,false,false,false,false,false]
+			new_held_dice=[true,false,false,false,false,false]
+			lambda {@r.roll_again(new_held_dice)}.should raise_error
+
 		end
 
 		it "should update Round.held_dice after each dice roll" do
@@ -258,6 +249,7 @@ describe Round do
 			new_held_dice=[true,false,false,false,false,false]
 			@r.roll_again(new_held_dice)
 			@r.held_dice.should_not == [false,false,false,false,false,false]
+			@r.held_dice.should eq([true, false,false,false,false,false])
 		end
 
 		it "should score the results again after the roll" do
@@ -276,18 +268,18 @@ describe Round do
 			a.should_not eq(b)
 		end
 	end
-	context "ending process" do
-		it "should allow player to stay" do
-			@r.points=0
-			@r.dices[0].value=5
-			@r.dices[1].value=5
-			@r.dices[2].value=5
-			@r.dices[3].value=3
-			@r.dices[4].value=6
-			@r.dices[5].value=6
-			@r.score
-			@r.player_stays
-			@r.stay.should eq(true)
-		end
-	end
+	# context "ending process" do
+	# 	it "should allow player to stay" do
+	# 		@r.points=0
+	# 		@r.dices[0].value=5
+	# 		@r.dices[1].value=5
+	# 		@r.dices[2].value=5
+	# 		@r.dices[3].value=3
+	# 		@r.dices[4].value=6
+	# 		@r.dices[5].value=6
+	# 		@r.score
+	# 		@r.player_stays
+	# 		@r.stay.should eq(true)
+	# 	end
+	# end
 end

@@ -3,14 +3,12 @@ require 'spec_helper'
 describe Turn do
 	before(:each) do
 		@t=Turn.new
-		@t.save
 		subject { @t }
-		@r=@t.rounds.first
+		@r=@t.rounds[0]
 	end
 
 	it { should respond_to(:total_points) }
 	it { should respond_to(:rounds) }
-	it { should respond_to(:player_id) }
 
 	context "starting" do
 		it "should create a new round to start out with" do
@@ -21,24 +19,26 @@ describe Turn do
 				@r.dices[i-1].value=1
 			end
 			@r.score
-			@r.save
 			@t.score
 			@t.total_points.should eq(3000)
+		end
+	end
+	context "game play" do
+		it "should return a round when a new round is started" do
+			@t.play_new_round.should be_an_instance_of(Round)
 		end
 		it "should add score up of previous round and new round" do
 			for i in 1..6
 				@r.dices[i-1].value=1
 			end
 			@r.score
-			@r.save
-		    @t.total_points=@t.rounds.first.points
+		    @t.score
 			@t.play_new_round
 			@r=@t.rounds.last
 			for i in 1..6
 				@r.dices[i-1].value=1
 			end
 			@r.score
-			@r.save
 			@t.score
 			@t.total_points.should eq(6000)
 		end
@@ -47,8 +47,7 @@ describe Turn do
 				@r.dices[i-1].value=1
 			end
 			@r.score
-			@r.save
-		    @t.total_points=@t.rounds.first.points
+		    @t.score
 			@t.play_new_round
 			@r2=@t.rounds.last
 			@r2.points=0
@@ -59,9 +58,7 @@ describe Turn do
 			@r2.dices[4].value=3
 			@r2.dices[5].value=4
 			@r2.score
-			@r2.save
 			@t.score
 			@t.total_points.should eq(0)
-		end
-	end
+		end	end
 end

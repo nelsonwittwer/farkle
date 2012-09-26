@@ -1,17 +1,15 @@
-class Round < ActiveRecord::Base
-  attr_accessible :name, :points, :stay, :complete
-  attr_accessor :held_dice, :old_points
-  has_many :dices
-  belongs_to :turn
-  after_save :setup
-  def setup
-  	self.held_dice=[false,false,false,false,false,false]
-  	self.complete=false
-    self.points=0
+class Round
+  attr_accessor :held_dice, :old_points, :name, :stay, :complete, :dices, :points
+  def initialize
+    @held_dice=[false,false,false,false,false,false]
+    @complete=false
+    @points=0
+    @dices=[]
+
   	6.times do
-  		self.dices.new.save
+  		@dices << Dice.new
   	end
-    self.score
+    score
   end
 
   #######################
@@ -28,60 +26,55 @@ class Round < ActiveRecord::Base
   # conditions.select{|hash|hash[:condition].call(@result)}
 
   def score
-  	@result = get_result(self.dices)
+  	@result = get_result(@dices)
   	if sort_dice(@result) == [1,2,3,4,5,6]
-  		self.points=1500
-  		self.name="Straight!"
-  		self.complete=true
-  	elsif self.count_same_dice(@result).max==6
-  		self.points=3000
-  		self.name="6 of a kind!"
-  		self.complete=true
-  	elsif self.count_same_dice(@result).max==5
-  		self.points=1500
-  		self.name="5 of a kind!"
-  	elsif self.count_same_dice(@result).max==4 && count_same_dice(@result).count(2)!=1
-  		self.points=1000
-  		self.name="4 of a kind!"
-  	elsif self.count_same_dice(@result).count(3)==2
-  		self.points=2000
-  		self.name="Two Tripples!"
-  		self.complete=true
-  	elsif self.count_same_dice(@result).count(2)==3
-  		self.points=1500
-  		self.name="Three Doubles!"
-  		self.complete=true
-  	elsif self.count_same_dice(@result).count(3)==1
+  		@points=1500
+  		@name="Straight!"
+  		@complete=true
+  	elsif count_same_dice(@result).max==6
+  		@points=3000
+  		@name="6 of a kind!"
+  		@complete=true
+  	elsif count_same_dice(@result).max==5
+  		@points=1500
+  		@name="5 of a kind!"
+  	elsif count_same_dice(@result).max==4 && count_same_dice(@result).count(2)!=1
+  		@points=1000
+  		@name="4 of a kind!"
+  	elsif count_same_dice(@result).count(3)==2
+  		@points=2000
+  		@name="Two Tripples!"
+  		@complete=true
+  	elsif count_same_dice(@result).count(2)==3
+  		@points=1500
+  		@name="Three Doubles!"
+  		@complete=true
+  	elsif count_same_dice(@result).count(3)==1
   		tripple_value=[]
   		for i in 0..5
-  			if self.count_same_dice(@result)[i]==3
-  				self.points=100*(i+1)
-  				self.name="Three #{i+1}s!"
+  			if count_same_dice(@result)[i]==3
+  				@points=100*(i+1)
+  				@name="Three #{i+1}s!"
   				#1s are 300, not 100
   				if i==0
-  					self.points=300
+  					@points=300
   				end
   			end
       end
-  	elsif self.count_same_dice(@result).max==4 && count_same_dice(@result).count(2)==1
-  		self.name="4 of a kind and a pair!"
-  		self.points=1300
+  	elsif count_same_dice(@result).max==4 && count_same_dice(@result).count(2)==1
+  		@name="4 of a kind and a pair!"
+  		@points=1300
     end
   	#100 for each 1	
-  	if self.count_same_dice(@result)[0]>0 && self.count_same_dice(@result)[0]<3 && self.complete!=true
-      self.points=self.points+(100*self.count_same_dice(@result)[0])
-  		self.name="#{self.count_same_dice(@result)[0]} 1s!"
+  	if count_same_dice(@result)[0]>0 && count_same_dice(@result)[0]<3 && @complete!=true
+      @points=@points+(100*count_same_dice(@result)[0])
+  		@name="#{count_same_dice(@result)[0]} 1s!"
   	end
   	#50 for each 5
-  	if self.count_same_dice(@result)[4]>0 && self.count_same_dice(@result)[4]<3 && self.complete!=true
-    		self.points=self.points+(50*self.count_same_dice(@result)[4])
-    		self.name="#{self.count_same_dice(@result)[4]} 5s!"
+  	if count_same_dice(@result)[4]>0 && count_same_dice(@result)[4]<3 && @complete!=true
+    		@points=@points+(50*count_same_dice(@result)[4])
+    		@name="#{count_same_dice(@result)[4]} 5s!"
     end
-
-    if self.points.nil?
-      binding.pry
-    end
-
   end
 
 
@@ -113,30 +106,21 @@ class Round < ActiveRecord::Base
   ##########################
 
   def roll_again(new_held_dice)
-    if new_held_dice.count(true) > self.held_dice.count(true)
+    if new_held_dice.count(true) > @held_dice.count(true)
       for i in 0..held_dice.count-1
         if new_held_dice[i]==false
-          self.dices[i]=Dice.new
+          dices[i]=Dice.new
         end
       end
-      self.held_dice=new_held_dice
-      self.old_points=self.points
-      self.score
-      if self.old_points < self.points
-        self.points=0
-        self.complete=true
+      @held_dice=new_held_dice
+      @old_points=@points
+      score
+      if @old_points < @points
+        @points=0
+        @complete=true
       end
     else
-      #I need to raise exception if the player didn't hold another dice.
+      raise TypeError, 'You must hold at least one more dice to roll'
     end
   end
-
-  ##########################
-  ### Player Stay Method ###
-  ##########################
-
-  def player_stays
-    self.stay=true
-  end
-	
 end

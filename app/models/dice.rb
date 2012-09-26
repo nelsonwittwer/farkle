@@ -1,9 +1,9 @@
-class Dice < ActiveRecord::Base
-  attr_accessible :value
-  belongs_to :round, :dependent => :destroy
+class Dice 
 
-  after_initialize do |dice|
-  	self.value=rand(1..6)
+  attr_accessor :value	
+  
+  def initialize 
+  	@value=rand(1..6)
   end	
   
 
